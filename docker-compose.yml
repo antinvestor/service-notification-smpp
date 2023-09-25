@@ -1,0 +1,24 @@
+version: '3'
+services:
+  
+  template_db:
+      image: postgres:15.3
+      environment:
+        POSTGRES_DB: service_template
+        POSTGRES_USER: ant
+        POSTGRES_PASSWORD: secret
+      ports:
+        - 5431:5432
+
+
+  migrate:
+    build: ./
+
+    depends_on:
+      - template_db
+    environment:
+      - LOG_LEVEL=debug
+      - DO_MIGRATION=true
+      - DATABASE_URL=postgres://ant:secret@template_db:5432/service_template?sslmode=disable
+    restart: on-failure
+
