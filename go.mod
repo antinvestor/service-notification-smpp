@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/pitabwire/frame v1.12.1
 	github.com/sirupsen/logrus v1.9.2
-	google.golang.org/grpc v1.55.0
+	google.golang.org/grpc v1.59.0
 	gorm.io/gorm v1.25.1
 )
 
@@ -20,7 +20,7 @@ require (
 	github.com/alitto/pond v1.8.3 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/envoyproxy/protoc-gen-validate v1.0.0 // indirect
+	github.com/envoyproxy/protoc-gen-validate v1.0.2 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
@@ -46,17 +46,18 @@ require (
 	go.opentelemetry.io/otel/sdk v1.15.1 // indirect
 	go.opentelemetry.io/otel/trace v1.15.1 // indirect
 	gocloud.dev v0.29.0 // indirect
-	golang.org/x/crypto v0.6.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/oauth2 v0.8.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/oauth2 v0.11.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.110.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
+	google.golang.org/protobuf v1.31.0 // indirect
 	gorm.io/datatypes v1.2.0 // indirect
 	gorm.io/driver/mysql v1.4.7 // indirect
 	gorm.io/driver/postgres v1.5.0 // indirect
