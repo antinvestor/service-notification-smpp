@@ -10,7 +10,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/pitabwire/frame v1.12.1
-	github.com/sirupsen/logrus v1.9.2
+	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/grpc v1.55.0
 	gorm.io/gorm v1.25.1
 )
