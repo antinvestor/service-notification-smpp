@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/antinvestor/apis v1.1.16
 	github.com/antinvestor/service-notification-api v1.1.25
-	github.com/antinvestor/service-partition-api v1.0.26
+	github.com/antinvestor/service-partition-api v1.0.27
 	github.com/antinvestor/service-profile-api v1.0.15
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
