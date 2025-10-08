@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/pitabwire/frame v1.12.1
 	github.com/sirupsen/logrus v1.9.2
-	google.golang.org/grpc v1.55.0
+	google.golang.org/grpc v1.76.0
 	gorm.io/gorm v1.25.1
 )
 
