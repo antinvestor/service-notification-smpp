@@ -12,7 +12,7 @@ require (
 	github.com/pitabwire/frame v1.12.1
 	github.com/sirupsen/logrus v1.9.2
 	google.golang.org/grpc v1.55.0
-	gorm.io/gorm v1.25.1
+	gorm.io/gorm v1.31.1
 )
 
 require (
