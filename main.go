@@ -1,120 +1,154 @@
 package main
 
 import (
-	"fmt"
-	notificationV1 "github.com/antinvestor/service-notification-api"
-	partitionV1 "github.com/antinvestor/service-partition-api"
-	"github.com/antinvestor/template-service/config"
-	"github.com/antinvestor/template-service/service"
-	"github.com/antinvestor/template-service/service/models"
-	"github.com/sirupsen/logrus"
-	"strings"
+	"context"
 
-	"github.com/antinvestor/apis"
-
-	profileV1 "github.com/antinvestor/service-profile-api"
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
+	"buf.build/gen/go/antinvestor/partition/connectrpc/go/partition/v1/partitionv1connect"
+	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
+	apis "github.com/antinvestor/apis/go/common"
+	"github.com/antinvestor/apis/go/notification"
+	"github.com/antinvestor/apis/go/partition"
+	"github.com/antinvestor/apis/go/profile"
+	"github.com/antinvestor/service-notification-smpp/config"
+	"github.com/antinvestor/service-notification-smpp/service"
+	"github.com/antinvestor/service-notification-smpp/service/events"
+	"github.com/antinvestor/service-notification-smpp/service/models"
 	"github.com/pitabwire/frame"
+	fconfig "github.com/pitabwire/frame/config"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/frame/security/openid"
+	"github.com/pitabwire/util"
 )
 
 func main() {
+	tmpCtx := context.Background()
 
-	serviceName := "template_service"
-
-	var templateConfig config.TemplateConfig
-	err := frame.ConfigProcess("", &templateConfig)
+	cfg, err := fconfig.LoadWithOIDC[config.TemplateConfig](tmpCtx)
 	if err != nil {
-		logrus.WithError(err).Fatal("could not process configs")
+		util.Log(tmpCtx).With("err", err).Error("could not process configs")
 		return
 	}
 
-	ctx, srv := frame.NewService(serviceName, frame.Config(&templateConfig))
-	defer srv.Stop(ctx)
+	if cfg.Name() == "" {
+		cfg.ServiceName = "template_service"
+	}
 
-	logger := srv.L()
+	ctx, svc := frame.NewServiceWithContext(
+		tmpCtx,
+		frame.WithConfig(&cfg),
+		frame.WithRegisterServerOauth2Client(),
+		frame.WithDatastore(),
+	)
+	defer svc.Stop(ctx)
 
-	serviceOptions := []frame.Option{frame.Datastore(ctx)}
-	if templateConfig.DoDatabaseMigrate() {
+	log := util.Log(ctx)
+	dbManager := svc.DatastoreManager()
 
-		srv.Init(serviceOptions...)
-
-		err = srv.MigrateDatastore(ctx, templateConfig.GetDatabaseMigrationPath(),
+	if cfg.DoDatabaseMigrate() {
+		dbPool := dbManager.GetPool(ctx, datastore.DefaultMigrationPoolName)
+		if dbPool == nil {
+			log.Fatal("database pool is nil - check DATABASE_URL environment variable")
+			return
+		}
+		err = dbManager.Migrate(ctx, dbPool, cfg.GetDatabaseMigrationPath(),
 			models.Template{})
-
 		if err != nil {
-			logger.WithError(err).Fatal("could not migrate successfully")
+			log.WithError(err).Fatal("could not migrate successfully")
 		}
 		return
 	}
 
-	err = srv.RegisterForJwt(ctx)
+	sm := svc.SecurityManager()
+
+	audienceList := cfg.GetOauth2ServiceAudience()
+
+	profileCli, err := setupProfileClient(ctx, sm, cfg, audienceList)
 	if err != nil {
-		logrus.WithError(err).Fatal("could not register for jwt")
+		log.WithError(err).Fatal("could not setup profile client")
+	}
+
+	partitionCli, err := setupPartitionClient(ctx, sm, cfg, audienceList)
+	if err != nil {
+		log.WithError(err).Fatal("could not setup partition client")
+	}
+
+	notificationCli, err := setupNotificationClient(ctx, sm, cfg, audienceList)
+	if err != nil {
+		log.WithError(err).Fatal("could not setup notification client")
+	}
+
+	dbPool := dbManager.GetPool(ctx, datastore.DefaultPoolName)
+	if dbPool == nil {
+		log.Fatal("database pool is nil - check DATABASE_URL environment variable")
 		return
 	}
 
-	oauth2ServiceHost := templateConfig.GetOauth2ServiceURI()
-	oauth2ServiceURL := fmt.Sprintf("%s/oauth2/token", oauth2ServiceHost)
+	authServiceHandlers := service.NewAuthRouterV1(svc, &cfg, profileCli, partitionCli, notificationCli)
 
-	audienceList := make([]string, 0)
-
-	if templateConfig.Oauth2ServiceAudience != "" {
-		audienceList = strings.Split(templateConfig.Oauth2ServiceAudience, ",")
+	serviceOptions := []frame.Option{
+		frame.WithHTTPHandler(authServiceHandlers),
+		frame.WithRegisterEvents(
+			events.NewTemplateSave(ctx, dbPool),
+		),
 	}
 
-	notificationCli, err := notificationV1.NewNotificationClient(ctx,
-		apis.WithEndpoint(templateConfig.NotificationServiceURI),
-		apis.WithTokenEndpoint(oauth2ServiceURL),
-		apis.WithTokenUsername(srv.JwtClientID()),
-		apis.WithTokenPassword(srv.JwtClientSecret()),
-		apis.WithAudiences(audienceList...))
-	if err != nil {
-		logger.WithError(err).Fatal("could not setup notification client")
-	}
+	svc.Init(ctx, serviceOptions...)
 
-	profileCli, err := profileV1.NewProfileClient(ctx,
-		apis.WithEndpoint(templateConfig.ProfileServiceURI),
-		apis.WithTokenEndpoint(oauth2ServiceURL),
-		apis.WithTokenUsername(srv.JwtClientID()),
-		apis.WithTokenPassword(srv.JwtClientSecret()),
-		apis.WithAudiences(audienceList...))
-	if err != nil {
-		logger.WithError(err).Fatal("could not setup profile client")
-	}
-
-	partitionCli, err := partitionV1.NewPartitionsClient(
-		ctx,
-		apis.WithEndpoint(templateConfig.PartitionServiceURI),
-		apis.WithTokenEndpoint(oauth2ServiceURL),
-		apis.WithTokenUsername(srv.JwtClientID()),
-		apis.WithTokenPassword(srv.JwtClientSecret()),
-		apis.WithAudiences(audienceList...))
-	if err != nil {
-		logger.WithError(err).Fatal("could not setup partition client")
-	}
-
-	serviceTranslations := frame.Translations("en")
-	serviceOptions = append(serviceOptions, serviceTranslations)
-
-	authServiceHandlers := service.NewAuthRouterV1(srv, &templateConfig, profileCli, partitionCli, notificationCli)
-
-	defaultServer := frame.HttpHandler(authServiceHandlers)
-	serviceOptions = append(serviceOptions, defaultServer)
-
-	serviceOptions = append(serviceOptions,
-		frame.WithPoolConcurrency(100),
-		frame.WithPoolCapacity(500),
-	)
-
-	srv.Init(serviceOptions...)
-
-	serverPort := templateConfig.ServerPort
+	serverPort := cfg.Port()
 	if serverPort == "" {
-		serverPort = "7020"
+		serverPort = ":7020"
 	}
 
-	logger.WithField("port", serverPort).Info(" initiating server operations")
-	err = srv.Run(ctx, fmt.Sprintf(":%v", serverPort))
+	log.With("port", serverPort).Info("initiating server operations")
+	err = svc.Run(ctx, serverPort)
 	if err != nil {
-		logger.WithError(err).Error("could not run Server ")
+		log.WithError(err).Error("could not run Server")
 	}
+}
+
+func setupProfileClient(
+	ctx context.Context,
+	clHolder security.InternalOauth2ClientHolder,
+	cfg config.TemplateConfig,
+	audiences []string,
+) (profilev1connect.ProfileServiceClient, error) {
+	return profile.NewClient(ctx,
+		apis.WithEndpoint(cfg.ProfileServiceURI),
+		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
+		apis.WithTokenUsername(clHolder.JwtClientID()),
+		apis.WithTokenPassword(clHolder.JwtClientSecret()),
+		apis.WithScopes(openid.ConstSystemScopeInternal),
+		apis.WithAudiences(audiences...))
+}
+
+func setupPartitionClient(
+	ctx context.Context,
+	clHolder security.InternalOauth2ClientHolder,
+	cfg config.TemplateConfig,
+	audiences []string,
+) (partitionv1connect.PartitionServiceClient, error) {
+	return partition.NewClient(ctx,
+		apis.WithEndpoint(cfg.PartitionServiceURI),
+		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
+		apis.WithTokenUsername(clHolder.JwtClientID()),
+		apis.WithTokenPassword(clHolder.JwtClientSecret()),
+		apis.WithScopes(openid.ConstSystemScopeInternal),
+		apis.WithAudiences(audiences...))
+}
+
+func setupNotificationClient(
+	ctx context.Context,
+	clHolder security.InternalOauth2ClientHolder,
+	cfg config.TemplateConfig,
+	audiences []string,
+) (notificationv1connect.NotificationServiceClient, error) {
+	return notification.NewClient(ctx,
+		apis.WithEndpoint(cfg.NotificationServiceURI),
+		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
+		apis.WithTokenUsername(clHolder.JwtClientID()),
+		apis.WithTokenPassword(clHolder.JwtClientSecret()),
+		apis.WithScopes(openid.ConstSystemScopeInternal),
+		apis.WithAudiences(audiences...))
 }

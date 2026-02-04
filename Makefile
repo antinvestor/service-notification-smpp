@@ -24,6 +24,8 @@ clean:  ## go clean
 fmt:    ## format the go source files
 	go fmt ./...
 
+format: fmt ## alias for fmt
+
 vet:    ## run go vet on the source files
 	go vet -all ./...
 

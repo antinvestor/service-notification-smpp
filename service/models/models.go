@@ -1,11 +1,11 @@
 package models
 
 import (
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
 )
 
 // Template Table holds the test models
 type Template struct {
-	frame.BaseModel
+	data.BaseModel
 	Name string `gorm:"type:varchar(255)"`
 }

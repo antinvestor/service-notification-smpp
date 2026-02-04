@@ -3,25 +3,32 @@ package events
 import (
 	"context"
 	"errors"
-	"github.com/antinvestor/template-service/service/models"
-	"github.com/pitabwire/frame"
-	"github.com/sirupsen/logrus"
+
+	"github.com/antinvestor/service-notification-smpp/service/models"
+	"github.com/pitabwire/frame/datastore/pool"
+	"github.com/pitabwire/util"
 	"gorm.io/gorm/clause"
 )
 
+const TemplateSaveEvent = "template.save"
+
 type TemplateSave struct {
-	Service *frame.Service
+	dbPool pool.Pool
+}
+
+func NewTemplateSave(_ context.Context, dbPool pool.Pool) *TemplateSave {
+	return &TemplateSave{dbPool: dbPool}
 }
 
 func (e *TemplateSave) Name() string {
-	return "template.save"
+	return TemplateSaveEvent
 }
 
-func (e *TemplateSave) PayloadType() interface{} {
+func (e *TemplateSave) PayloadType() any {
 	return &models.Template{}
 }
 
-func (e *TemplateSave) Validate(ctx context.Context, payload interface{}) error {
+func (e *TemplateSave) Validate(ctx context.Context, payload any) error {
 	template, ok := payload.(*models.Template)
 	if !ok {
 		return errors.New(" payload is not of type models.Template")
@@ -34,13 +41,13 @@ func (e *TemplateSave) Validate(ctx context.Context, payload interface{}) error 
 	return nil
 }
 
-func (e *TemplateSave) Execute(ctx context.Context, payload interface{}) error {
+func (e *TemplateSave) Execute(ctx context.Context, payload any) error {
 	template := payload.(*models.Template)
 
-	logger := logrus.WithField("type", e.Name())
-	logger.WithField("payload", template).Info("handling event")
+	logger := util.Log(ctx).With("type", e.Name())
+	logger.With("payload", template).Info("handling event")
 
-	result := e.Service.DB(ctx, false).Debug().Clauses(clause.OnConflict{
+	result := e.dbPool.DB(ctx, false).Debug().Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
 		UpdateAll: true,
 	}).Create(template)
@@ -50,7 +57,7 @@ func (e *TemplateSave) Execute(ctx context.Context, payload interface{}) error {
 		logger.WithError(err).Warn("could not save to db")
 		return err
 	}
-	logger.WithField("rows affected", result.RowsAffected).Info("successfully saved record to db")
+	logger.With("rows affected", result.RowsAffected).Info("successfully saved record to db")
 
 	return nil
 }

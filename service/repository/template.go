@@ -2,45 +2,43 @@ package repository
 
 import (
 	"context"
-	"github.com/antinvestor/template-service/service/models"
 
-	"github.com/pitabwire/frame"
-	"gorm.io/gorm"
+	"github.com/antinvestor/service-notification-smpp/service/models"
+	"github.com/pitabwire/frame/datastore/pool"
 )
 
 type TemplateRepository interface {
-	GetByID(id string) (*models.Template, error)
-	GetByName(name string) (*models.Template, error)
-	Save(language *models.Template) error
+	GetByID(ctx context.Context, id string) (*models.Template, error)
+	GetByName(ctx context.Context, name string) (*models.Template, error)
+	Save(ctx context.Context, language *models.Template) error
 }
 
 type templateRepository struct {
-	readDb  *gorm.DB
-	writeDb *gorm.DB
+	dbPool pool.Pool
 }
 
-func NewTemplateRepository(ctx context.Context, service *frame.Service) TemplateRepository {
-	return &templateRepository{readDb: service.DB(ctx, true), writeDb: service.DB(ctx, false)}
+func NewTemplateRepository(_ context.Context, dbPool pool.Pool) TemplateRepository {
+	return &templateRepository{dbPool: dbPool}
 }
 
-func (repo *templateRepository) GetByName(name string) (*models.Template, error) {
+func (repo *templateRepository) GetByName(ctx context.Context, name string) (*models.Template, error) {
 	var template models.Template
-	err := repo.readDb.First(&template, "name = ?", name).Error
+	err := repo.dbPool.DB(ctx, true).First(&template, "name = ?", name).Error
 	if err != nil {
 		return nil, err
 	}
 	return &template, nil
 }
 
-func (repo *templateRepository) GetByID(id string) (*models.Template, error) {
+func (repo *templateRepository) GetByID(ctx context.Context, id string) (*models.Template, error) {
 	template := models.Template{}
-	err := repo.readDb.First(&template, "id = ?", id).Error
+	err := repo.dbPool.DB(ctx, true).First(&template, "id = ?", id).Error
 	if err != nil {
 		return nil, err
 	}
 	return &template, nil
 }
 
-func (repo *templateRepository) Save(language *models.Template) error {
-	return repo.writeDb.Save(language).Error
+func (repo *templateRepository) Save(ctx context.Context, language *models.Template) error {
+	return repo.dbPool.DB(ctx, false).Save(language).Error
 }

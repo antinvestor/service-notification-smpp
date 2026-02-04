@@ -1,15 +1,15 @@
 package business
 
 import (
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"fmt"
+
+	"connectrpc.com/connect"
 )
 
 var (
-	ErrorUnspecifiedID      = status.Error(codes.InvalidArgument, "No id was supplied")
-	ErrorEmptyValueSupplied = status.Error(codes.InvalidArgument, "Empty value supplied")
-	ErrorItemExist          = status.Error(codes.AlreadyExists, "Specified item already exists")
-	ErrorItemDoesNotExist   = status.Error(codes.NotFound, "Specified item does not exist")
-
-	ErrorInitializationFail = status.Error(codes.Internal, "Internal configuration is invalid")
+	ErrorUnspecifiedID      = connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("no id was supplied"))
+	ErrorEmptyValueSupplied = connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("empty value supplied"))
+	ErrorItemExist          = connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("specified item already exists"))
+	ErrorItemDoesNotExist   = connect.NewError(connect.CodeNotFound, fmt.Errorf("specified item does not exist"))
+	ErrorInitializationFail = connect.NewError(connect.CodeInternal, fmt.Errorf("internal configuration is invalid"))
 )
