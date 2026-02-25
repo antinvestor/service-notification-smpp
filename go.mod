@@ -1,6 +1,6 @@
 module github.com/antinvestor/service-notification-smpp
 
-go 1.25.2
+go 1.26
 
 require (
 	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20260102123330-d6847f42a19a.2
@@ -13,8 +13,8 @@ require (
 	github.com/antinvestor/apis/go/profile v1.53.4
 	github.com/gorilla/mux v1.8.1
 	github.com/linxGnu/gosmpp v0.3.1
-	github.com/pitabwire/frame v1.73.0
-	github.com/pitabwire/util v0.5.0
+	github.com/pitabwire/frame v1.74.0
+	github.com/pitabwire/util v0.6.0
 	gorm.io/gorm v1.31.1
 )
 
