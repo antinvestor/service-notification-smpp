@@ -7,10 +7,10 @@ require (
 	buf.build/gen/go/antinvestor/partition/connectrpc/go v1.19.1-20260219061955-b6e126d51e84.2
 	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20260219062039-499f582dea7e.2
 	connectrpc.com/connect v1.19.1
-	github.com/antinvestor/apis/go/common v1.53.11
+	github.com/antinvestor/apis/go/common v1.53.17
 	github.com/antinvestor/apis/go/notification v1.53.13
-	github.com/antinvestor/apis/go/partition v1.53.13
-	github.com/antinvestor/apis/go/profile v1.53.13
+	github.com/antinvestor/apis/go/partition v1.53.18
+	github.com/antinvestor/apis/go/profile v1.53.18
 	github.com/gorilla/mux v1.8.1
 	github.com/linxGnu/gosmpp v0.3.1
 	github.com/pitabwire/frame v1.75.0
@@ -105,7 +105,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.269.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260223185530-2f722ef697dc // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260223185530-2f722ef697dc // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
 	google.golang.org/grpc v1.79.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
