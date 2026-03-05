@@ -13,7 +13,7 @@ require (
 	github.com/antinvestor/apis/go/profile v1.53.18
 	github.com/gorilla/mux v1.8.1
 	github.com/linxGnu/gosmpp v0.3.1
-	github.com/pitabwire/frame v1.76.4
+	github.com/pitabwire/frame v1.76.5
 	github.com/pitabwire/util v0.6.0
 	gorm.io/gorm v1.31.1
 )
