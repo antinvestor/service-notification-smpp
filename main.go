@@ -17,8 +17,6 @@ import (
 	"github.com/pitabwire/frame"
 	fconfig "github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
-	"github.com/pitabwire/frame/security"
-	"github.com/pitabwire/frame/security/openid"
 	"github.com/pitabwire/util"
 )
 
@@ -38,7 +36,6 @@ func main() {
 	ctx, svc := frame.NewServiceWithContext(
 		tmpCtx,
 		frame.WithConfig(&cfg),
-		frame.WithRegisterServerOauth2Client(),
 		frame.WithDatastore(),
 	)
 	defer svc.Stop(ctx)
@@ -60,21 +57,19 @@ func main() {
 		return
 	}
 
-	sm := svc.SecurityManager()
-
 	audienceList := cfg.GetOauth2ServiceAudience()
 
-	profileCli, err := setupProfileClient(ctx, sm, cfg, audienceList)
+	profileCli, err := setupProfileClient(ctx, cfg, audienceList)
 	if err != nil {
 		log.WithError(err).Fatal("could not setup profile client")
 	}
 
-	partitionCli, err := setupPartitionClient(ctx, sm, cfg, audienceList)
+	partitionCli, err := setupPartitionClient(ctx, cfg, audienceList)
 	if err != nil {
 		log.WithError(err).Fatal("could not setup partition client")
 	}
 
-	notificationCli, err := setupNotificationClient(ctx, sm, cfg, audienceList)
+	notificationCli, err := setupNotificationClient(ctx, cfg, audienceList)
 	if err != nil {
 		log.WithError(err).Fatal("could not setup notification client")
 	}
@@ -110,45 +105,36 @@ func main() {
 
 func setupProfileClient(
 	ctx context.Context,
-	clHolder security.InternalOauth2ClientHolder,
 	cfg config.TemplateConfig,
 	audiences []string,
 ) (profilev1connect.ProfileServiceClient, error) {
-	return profile.NewClient(ctx,
-		apis.WithEndpoint(cfg.ProfileServiceURI),
-		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
-		apis.WithTokenUsername(clHolder.JwtClientID()),
-		apis.WithTokenPassword(clHolder.JwtClientSecret()),
-		apis.WithScopes(openid.ConstSystemScopeInternal),
-		apis.WithAudiences(audiences...))
+	return profile.NewClient(ctx, &cfg, apis.ServiceTarget{
+		Endpoint:              cfg.ProfileServiceURI,
+		WorkloadAPITargetPath: cfg.ProfileServiceWorkloadAPITargetPath,
+		Audiences:             audiences,
+	})
 }
 
 func setupPartitionClient(
 	ctx context.Context,
-	clHolder security.InternalOauth2ClientHolder,
 	cfg config.TemplateConfig,
 	audiences []string,
 ) (partitionv1connect.PartitionServiceClient, error) {
-	return partition.NewClient(ctx,
-		apis.WithEndpoint(cfg.PartitionServiceURI),
-		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
-		apis.WithTokenUsername(clHolder.JwtClientID()),
-		apis.WithTokenPassword(clHolder.JwtClientSecret()),
-		apis.WithScopes(openid.ConstSystemScopeInternal),
-		apis.WithAudiences(audiences...))
+	return partition.NewClient(ctx, &cfg, apis.ServiceTarget{
+		Endpoint:              cfg.PartitionServiceURI,
+		WorkloadAPITargetPath: cfg.PartitionServiceWorkloadAPITargetPath,
+		Audiences:             audiences,
+	})
 }
 
 func setupNotificationClient(
 	ctx context.Context,
-	clHolder security.InternalOauth2ClientHolder,
 	cfg config.TemplateConfig,
 	audiences []string,
 ) (notificationv1connect.NotificationServiceClient, error) {
-	return notification.NewClient(ctx,
-		apis.WithEndpoint(cfg.NotificationServiceURI),
-		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
-		apis.WithTokenUsername(clHolder.JwtClientID()),
-		apis.WithTokenPassword(clHolder.JwtClientSecret()),
-		apis.WithScopes(openid.ConstSystemScopeInternal),
-		apis.WithAudiences(audiences...))
+	return notification.NewClient(ctx, &cfg, apis.ServiceTarget{
+		Endpoint:              cfg.NotificationServiceURI,
+		WorkloadAPITargetPath: cfg.NotificationServiceWorkloadAPITargetPath,
+		Audiences:             audiences,
+	})
 }
