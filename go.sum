@@ -191,6 +191,8 @@ github.com/panjf2000/ants/v2 v2.11.5 h1:a7LMnMEeux/ebqTux140tRiaqcFTV0q2bEHF03nl
 github.com/panjf2000/ants/v2 v2.11.5/go.mod h1:8u92CYMUc6gyvTIw8Ru7Mt7+/ESnJahz5EVtqfrilek=
 github.com/pitabwire/frame v1.77.0 h1:tGDa+TUQU0gYHNcP6KjOaEQLZN0YSnijkLd2P+3V3Eg=
 github.com/pitabwire/frame v1.77.0/go.mod h1:RO6gvXGUAfGfLS625vIB1cY3lmgt9X2G5hrX8c/cPwQ=
+github.com/pitabwire/frame v1.77.1 h1:dvCapGJhZoQ1zZyBlmHp9Xvbqebo2FZ8fvlxIuY7ipc=
+github.com/pitabwire/frame v1.77.1/go.mod h1:qnKUeQxlNQa64VgpzTgq/M6blRDjUu8h1GtC4zTwPRE=
 github.com/pitabwire/natspubsub v0.7.13 h1:eEGhAn7mGqjxX6K5ba4RNkTn4TRxk6hbDrTWLusse4Y=
 github.com/pitabwire/natspubsub v0.7.13/go.mod h1:WR1/+7LaWx01PEyu0PkD2fdQ0EOeyX6jx3IHHzqM18o=
 github.com/pitabwire/util v0.6.1 h1:aXk3gp3qbs/gTSiqSbA8mcNn0So+7mNXrTBt1DJI9Ok=
